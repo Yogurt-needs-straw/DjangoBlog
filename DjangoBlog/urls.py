@@ -16,6 +16,12 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
+from api import views
+
 urlpatterns = [
     # path('admin/', admin.site.urls),
+    # path('db/', views.db), # 创建一些数据
+
+    path('api/blog/', views.BlogView.as_view()),
+
 ]

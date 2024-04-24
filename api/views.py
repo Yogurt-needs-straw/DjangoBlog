@@ -33,13 +33,25 @@ def db(request):
 
     return HttpResponse("成功")
 
+class BlogUserSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = models.UserInfo
+        fields = ["id", "username"]
+
 class BlogSerializers(serializers.ModelSerializer):
     category = serializers.CharField(source="get_category_display")
     ctime = serializers.DateTimeField(format="%Y-%m-%d")
+    # creator_name = serializers.CharField(source="creator.username")
+    # creator = serializers.SerializerMethodField()
+    creator = BlogUserSerializers()
 
     class Meta:
         model = models.Blog
         fields = ["category", "image", "title", "summary", "ctime", "comment_count", "favor_count", "creator"]
+
+    # 钩子函数
+    # def get_creator(self, obj):
+    #     return {"id": obj.creator_id, "name": obj.creator.username}
 
 class BlogView(APIView):
     def get(self, reqest, *args, **kwargs):
@@ -52,4 +64,5 @@ class BlogView(APIView):
         ser = BlogSerializers(instance=queryset, many=True)
 
         # 3.返回
-        return Response(ser.data)
+        context = {"code":1000, "data":ser.data}
+        return Response(context)

@@ -66,3 +66,32 @@ class BlogView(APIView):
         # 3.返回
         context = {"code":1000, "data":ser.data}
         return Response(context)
+
+class BlogDetailSerializers(serializers.ModelSerializer):
+    category = serializers.CharField(source="get_category_display")
+    ctime = serializers.DateTimeField(format="%Y-%m-%d")
+    creator = BlogUserSerializers()
+
+    class Meta:
+        model = models.Blog
+        fields = "__all__"
+
+
+class BlogDetailView(APIView):
+    def get(self, reqest, *args, **kwargs):
+        """ 获取博客列表 """
+
+        # 1.获取ID
+        pk = kwargs.get("pk")
+
+        # 2.根据ID获取对象
+        instance = models.Blog.objects.filter(id=pk).first()
+        if not instance:
+            return Response({"code": 1001, "error": "不存在"})
+
+        # 3.序列化
+        ser = BlogSerializers(instance=instance, many=False)
+
+        # 4.返回
+        context = {"code": 1000, "data": ser.data}
+        return Response(context)

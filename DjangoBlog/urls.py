@@ -23,5 +23,6 @@ urlpatterns = [
     # path('db/', views.db), # 创建一些数据
 
     path('api/blog/', views.BlogView.as_view()),
+    path('api/blog/<int:pk>/', views.BlogDetailView.as_view()),
 
 ]

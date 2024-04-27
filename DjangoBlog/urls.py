@@ -24,5 +24,6 @@ urlpatterns = [
 
     path('api/blog/', views.BlogView.as_view()),
     path('api/blog/<int:pk>/', views.BlogDetailView.as_view()),
+    path('api/comment/<int:blog_id>/', views.CommentView.as_view()),
 
 ]

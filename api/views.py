@@ -10,26 +10,30 @@ from rest_framework import serializers
 
 def db(request):
 
-    v1 = models.UserInfo.objects.create(username="admin", password="123")
-    v2 = models.UserInfo.objects.create(username="x1", password="123")
+    # v1 = models.UserInfo.objects.create(username="admin", password="123")
+    # v2 = models.UserInfo.objects.create(username="x1", password="123")
+    #
+    # models.Blog.objects.create(
+    #     category=1,
+    #     image="xxx/xxx.png",
+    #     title="x经理",
+    #     summary=".....",
+    #     text="xxxxxxxxxx",
+    #     creator=v1
+    # )
+    #
+    # models.Blog.objects.create(
+    #     category=2,
+    #     image="xxx/xxx.png",
+    #     title="a经理",
+    #     summary=".....cccccc",
+    #     text="xxxxxxxxxxdddddddddd",
+    #     creator=v2
+    # )
 
-    models.Blog.objects.create(
-        category=1,
-        image="xxx/xxx.png",
-        title="x经理",
-        summary=".....",
-        text="xxxxxxxxxx",
-        creator=v1
-    )
-
-    models.Blog.objects.create(
-        category=2,
-        image="xxx/xxx.png",
-        title="a经理",
-        summary=".....cccccc",
-        text="xxxxxxxxxxdddddddddd",
-        creator=v2
-    )
+    # 添加评论
+    # models.Comment.objects.create(content='x1',blog_id=1,user_id=1)
+    # models.Comment.objects.create(content='x222',blog_id=1,user_id=2)
 
     return HttpResponse("成功")
 
@@ -91,6 +95,26 @@ class BlogDetailView(APIView):
 
         # 3.序列化
         ser = BlogSerializers(instance=instance, many=False)
+
+        # 4.返回
+        context = {"code": 1000, "data": ser.data}
+        return Response(context)
+
+
+class CommentSerializers(serializers.ModelSerializer):
+    user = serializers.CharField(source="user.username")
+    class Meta:
+        model = models.Comment
+        fields = ["id", "content", "user"]
+
+class CommentView(APIView):
+    def get(self, request, blog_id):
+        """ 评论列表 """
+        # 1.获取评论对象
+        queryset = models.Comment.objects.filter(blog_id=blog_id)
+
+        # 2.序列化
+        ser = CommentSerializers(instance=queryset, many=True)
 
         # 4.返回
         context = {"code": 1000, "data": ser.data}

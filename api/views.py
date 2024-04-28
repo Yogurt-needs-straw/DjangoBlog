@@ -100,12 +100,15 @@ class BlogDetailView(APIView):
         context = {"code": 1000, "data": ser.data}
         return Response(context)
 
-
-class CommentSerializers(serializers.ModelSerializer):
-    user = serializers.CharField(source="user.username")
+from ext.hook import NbHookSerializer
+class CommentSerializers(NbHookSerializer,serializers.ModelSerializer):
+    # user = serializers.CharField(source="user.username")
     class Meta:
         model = models.Comment
         fields = ["id", "content", "user"]
+
+    def nb_user(self, obj):
+        return obj.user.username
 
 class CommentView(APIView):
     def get(self, request, blog_id):

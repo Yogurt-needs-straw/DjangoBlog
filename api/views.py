@@ -122,3 +122,35 @@ class CommentView(APIView):
         # 4.返回
         context = {"code": 1000, "data": ser.data}
         return Response(context)
+
+
+class RegisterSerializers(serializers.ModelSerializer):
+
+    confirm_password = serializers.CharField()
+
+    class Meta:
+        model = models.UserInfo
+        fields = ["username", "password", "confirm_password"]
+
+    def validate_confirm_password(self, value):
+        print(value)
+        print(self.initial_data)
+        return value
+
+# 用户注册
+class RegisterView(APIView):
+
+    def post(self, request):
+
+        # 1.提交数据{"username":123123, "password":123123, "confirm_password":"xxx"}
+
+        # 2.校验 + 保存
+        ser = RegisterSerializers(data=request.data)
+        if ser.is_valid():
+            # ser.save()
+            return Response({"code": 1000, "data": ser.data})
+        else:
+            return Response({"code": 1001, "error": "注册失败", "detail": ser.errors})
+
+
+

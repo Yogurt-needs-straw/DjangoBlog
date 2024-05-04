@@ -1,3 +1,5 @@
+
+
 from django.shortcuts import render, HttpResponse
 
 # Create your views here.
@@ -5,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from api import models
-from rest_framework import serializers
+from rest_framework import serializers, exceptions
 
 
 def db(request):
@@ -126,15 +128,26 @@ class CommentView(APIView):
 
 class RegisterSerializers(serializers.ModelSerializer):
 
-    confirm_password = serializers.CharField()
+    confirm_password = serializers.CharField(write_only=True)
 
     class Meta:
         model = models.UserInfo
-        fields = ["username", "password", "confirm_password"]
+        fields = ["id", "username", "password", "confirm_password"]
+        extra_kwargs = {
+            "id": {"read_only": True},
+            "password": {"write_only": True}
+        }
+
+    def validate_password(self, value):
+        print("密码：", value)
+        return value
 
     def validate_confirm_password(self, value):
         print(value)
         print(self.initial_data)
+        password = self.initial_data.get("password")
+        if password != value:
+            raise exceptions.ValidationError("密码不一致")
         return value
 
 # 用户注册
@@ -147,7 +160,8 @@ class RegisterView(APIView):
         # 2.校验 + 保存
         ser = RegisterSerializers(data=request.data)
         if ser.is_valid():
-            # ser.save()
+            ser.validated_data.pop("confirm_password")
+            ser.save()
             return Response({"code": 1000, "data": ser.data})
         else:
             return Response({"code": 1001, "error": "注册失败", "detail": ser.errors})

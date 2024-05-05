@@ -1,4 +1,4 @@
-
+import uuid
 
 from django.shortcuts import render, HttpResponse
 
@@ -166,5 +166,29 @@ class RegisterView(APIView):
         else:
             return Response({"code": 1001, "error": "注册失败", "detail": ser.errors})
 
+class LoginSerializers(serializers.ModelSerializer):
+
+    class Meta:
+        model = models.UserInfo
+        fields = ["username", "password"]
+
+
+class LoginView(APIView):
+
+    def post(self, request):
+        # request.data  # {"username":"", "password":""}
+        ser = LoginSerializers(data=request.data)
+        if not ser.is_valid():
+            return Response({"code": 1001, "error": "校验失败", "detail": ser.errors})
+
+        instance = models.UserInfo.objects.filter(**ser.validated_data).first()
+        if not instance:
+            return Response({"code": 1002, "error": "用户名或密码错误"})
+
+        token = str(uuid.uuid4())
+        instance.token = token
+        instance.save()
+
+        return Response({"code": 1000, "token": token})
 
 

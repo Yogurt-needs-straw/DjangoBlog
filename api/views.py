@@ -9,6 +9,8 @@ from rest_framework.views import APIView
 from api import models
 from rest_framework import serializers, exceptions
 
+from ext.auth import BlogAuthentication
+
 
 def db(request):
 
@@ -113,6 +115,8 @@ class CommentSerializers(NbHookSerializer,serializers.ModelSerializer):
         return obj.user.username
 
 class CommentView(APIView):
+    authentication_classes = [BlogAuthentication]
+
     def get(self, request, blog_id):
         """ 评论列表 """
         # 1.获取评论对象
@@ -124,6 +128,21 @@ class CommentView(APIView):
         # 4.返回
         context = {"code": 1000, "data": ser.data}
         return Response(context)
+
+    def post(self, request, blog_id):
+        """ 发布评论 """
+        # 判断是否用户登录
+        if not request.user:
+            return Response({"code": 3000, "error": "认证失败"})
+
+        blog_object = models.Blog.objects.filter(id=blog_id).filter()
+        if not blog_object:
+            return Response({"code": 2000, "error": "博客不存在"})
+
+        # /api/comment/1/
+        # {"content":"...."}
+        # 保存
+
 
 
 class RegisterSerializers(serializers.ModelSerializer):
@@ -190,5 +209,11 @@ class LoginView(APIView):
         instance.save()
 
         return Response({"code": 1000, "token": token})
+
+
+# 创建评论
+class CreateComment(APIView):
+    def post(self):
+        pass
 
 

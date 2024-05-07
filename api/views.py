@@ -110,6 +110,10 @@ class CommentSerializers(NbHookSerializer,serializers.ModelSerializer):
     class Meta:
         model = models.Comment
         fields = ["id", "content", "user"]
+        extra_kwargs = {
+            "id": {"read_only": True},
+            "user": {"read_only": True}
+        }
 
     def nb_user(self, obj):
         return obj.user.username
@@ -135,9 +139,16 @@ class CommentView(APIView):
         if not request.user:
             return Response({"code": 3000, "error": "认证失败"})
 
-        blog_object = models.Blog.objects.filter(id=blog_id).filter()
+        blog_object = models.Blog.objects.filter(id=blog_id).first()
         if not blog_object:
             return Response({"code": 2000, "error": "博客不存在"})
+
+        ser = CommentSerializers(data=request.data)
+        if not ser.is_valid():
+            return Response({"code": 1002, "error": "验证失败","detail":ser.errors})
+
+        ser.save(blog=blog_object, user=request.user)
+        return Response({"code": 1000, "data": ser.data})
 
         # /api/comment/1/
         # {"content":"...."}

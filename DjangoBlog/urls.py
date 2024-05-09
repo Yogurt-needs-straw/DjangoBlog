@@ -29,4 +29,6 @@ urlpatterns = [
     path('api/register/', views.RegisterView.as_view()),
     path('api/login/', views.LoginView.as_view()),
 
+    path('api/faovr/', views.FavorView.as_view()),
+
 ]

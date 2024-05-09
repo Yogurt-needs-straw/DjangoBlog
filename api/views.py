@@ -9,7 +9,7 @@ from rest_framework.views import APIView
 from api import models
 from rest_framework import serializers, exceptions
 
-from ext.auth import BlogAuthentication
+from ext.auth import BlogAuthentication, NoAuthentication
 
 
 def db(request):
@@ -222,9 +222,19 @@ class LoginView(APIView):
         return Response({"code": 1000, "token": token})
 
 
-# 创建评论
-class CreateComment(APIView):
+# # 创建评论
+# class CreateComment(APIView):
+#     def post(self):
+#         pass
+#
+
+
+
+class FavorView(APIView):
+    # 查询评论是否存在 不存在添加 、 存在 不添加
+
+    authentication_classes = [BlogAuthentication, NoAuthentication]
+
     def post(self):
         pass
-
 

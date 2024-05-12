@@ -228,6 +228,10 @@ class LoginView(APIView):
 #         pass
 #
 
+class FavorSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = models.Favor
+        fields = ["id",'blog']
 
 
 class FavorView(APIView):
@@ -235,6 +239,17 @@ class FavorView(APIView):
 
     authentication_classes = [BlogAuthentication, NoAuthentication]
 
-    def post(self):
-        pass
+    def post(self, request):
+        print(request.user)
+        ser = FavorSerializers(data=request.data)
+        if not ser.is_valid():
+            return Response({"code": 1002, "error": "校验失败", "detail":ser.errors})
 
+        # 1.存在，不再点赞
+        exists = models.Favor.objects.filter(user=request.user, **ser.validated_data).exists()
+        if exists:
+            return Response({"code": 1005, "error": "已存在"})
+
+        # 2.不存在， 点赞
+        ser.save(user=request.user)
+        return Response({"code": 1000, "data": ser.data})

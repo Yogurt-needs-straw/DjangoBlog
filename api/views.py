@@ -11,6 +11,7 @@ from rest_framework import serializers, exceptions
 
 from ext.auth import BlogAuthentication, NoAuthentication
 
+from ext.hook import NbHookSerializer
 
 def db(request):
 
@@ -46,22 +47,30 @@ class BlogUserSerializers(serializers.ModelSerializer):
         model = models.UserInfo
         fields = ["id", "username"]
 
-class BlogSerializers(serializers.ModelSerializer):
-    category = serializers.CharField(source="get_category_display")
-    ctime = serializers.DateTimeField(format="%Y-%m-%d")
+class BlogSerializers(NbHookSerializer,serializers.ModelSerializer):
+    # category = serializers.CharField(source="get_category_display")
+    ctime = serializers.DateTimeField(format="%Y-%m-%d", read_only=True)
     # creator_name = serializers.CharField(source="creator.username")
     # creator = serializers.SerializerMethodField()
-    creator = BlogUserSerializers()
+    creator = BlogUserSerializers(read_only=True)
 
     class Meta:
         model = models.Blog
         fields = ["category", "image", "title", "summary", "ctime", "comment_count", "favor_count", "creator"]
-
+        extra_kwargs = {
+            "comment_count": {"read_only": True},
+            "favor_count": {"read_only": True}
+        }
     # 钩子函数
     # def get_creator(self, obj):
     #     return {"id": obj.creator_id, "name": obj.creator.username}
 
+    def nb_category(self, obj):
+        return obj.get_category_display()
+
 class BlogView(APIView):
+    authentication_classes = [BlogAuthentication,]
+
     def get(self, reqest, *args, **kwargs):
         """ 获取博客列表 """
 
@@ -74,6 +83,14 @@ class BlogView(APIView):
         # 3.返回
         context = {"code":1000, "data":ser.data}
         return Response(context)
+
+    def post(self, request):
+        if not request.user:
+            return Response({"code": 3000, "error": "认证失败"})
+        ser = BlogSerializers(data=request.data)
+        if not ser.is_valid():
+            return Response({"code": 1002, "error": "校验失败", "detail": ser.errors})
+
 
 class BlogDetailSerializers(serializers.ModelSerializer):
     category = serializers.CharField(source="get_category_display")
@@ -104,7 +121,7 @@ class BlogDetailView(APIView):
         context = {"code": 1000, "data": ser.data}
         return Response(context)
 
-from ext.hook import NbHookSerializer
+
 class CommentSerializers(NbHookSerializer,serializers.ModelSerializer):
     # user = serializers.CharField(source="user.username")
     class Meta:

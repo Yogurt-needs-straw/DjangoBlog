@@ -56,10 +56,11 @@ class BlogSerializers(NbHookSerializer,serializers.ModelSerializer):
 
     class Meta:
         model = models.Blog
-        fields = ["category", "image", "title", "summary", "ctime", "comment_count", "favor_count", "creator"]
+        fields = ["id", "category", "image", "title", "text", "summary", "ctime", "comment_count", "favor_count", "creator"]
         extra_kwargs = {
             "comment_count": {"read_only": True},
-            "favor_count": {"read_only": True}
+            "favor_count": {"read_only": True},
+            "text": {"write_only": True}
         }
     # 钩子函数
     # def get_creator(self, obj):
@@ -91,6 +92,8 @@ class BlogView(APIView):
         if not ser.is_valid():
             return Response({"code": 1002, "error": "校验失败", "detail": ser.errors})
 
+        ser.save(creator=request.user)
+        return Response({"code": 1000, "data": ser.data})
 
 class BlogDetailSerializers(serializers.ModelSerializer):
     category = serializers.CharField(source="get_category_display")
